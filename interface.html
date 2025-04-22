@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>paintify</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+
+        <div class="deepai-form">
+            <h2>Welcome to Paintify!</h2>
+            <p>Upload an image to apply painted effect using DeepAI.</p>
+            <form action="/deepai" method="post" enctype="multipart/form-data">
+                <label for="deepai-file">Choose Image:</label>
+                <input type="file" id="deepai-file" name="file" accept="image/*" required>
+                <button type="submit">Paintify</button>
+            </form>
+        </div>
+
+        <!-- Image Preview Block -->
+        <div class="image-preview">
+            <h3>Uploaded Image:</h3>
+            <img id="preview" src="" alt="Image Preview" style="display: none; max-width: 100%; height: auto; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);">
+        </div>
+        <div class="processed-image">
+            <h3>Paintified Image:</h3>
+            <img id="paintified" src="" alt="Paintified Image" style="display: none; max-width: 100%; height: auto; border-radius: 10px;box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2)">
+            <a id="download-link" href="#" style="display: none;">Download Paintified Image</a>
+        </div>
+    </div>
+
+    <script>
+        // Display uploaded image preview
+        const fileInput = document.getElementById('deepai-file');
+        const previewImage = document.getElementById('preview');
+
+        fileInput.addEventListener('change', function() {
+            const file = fileInput.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImage.src = e.target.result;
+                    previewImage.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        document.querySelector('form').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+    
+            const response = await fetch('/upload', {
+                method: 'POST',
+                body: formData,
+            });
+            const data = await response.json();
+    
+            if (data.processed_image) {
+                const paintified = document.getElementById('paintified');
+                paintified.src = 'data:image/png;base64,' + data.processed_image;
+                paintified.style.display = 'block';
+    
+                const downloadLink = document.getElementById('download-link');
+                downloadLink.href = paintified.src;
+                downloadLink.download = 'paintified.png';
+                downloadLink.style.display = 'block';
+            } else {
+                alert(data.error || 'An error occurred.');
+            }
+        });
+    </script>
+</body>
+</html>
